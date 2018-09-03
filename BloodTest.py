@@ -38,7 +38,7 @@ def Naiivegaussian(x,mu,var):
 	z = z/(((2*3.14)**(d/2))*det)
 	return z
 
-def classify(x,xtest,ytest,N):
+def classifyNaiiveBayes(x,xtest,ytest,N):
 	theta = []
 	cc = []
 	prior = []
@@ -54,10 +54,58 @@ def classify(x,xtest,ytest,N):
 		posterior.append(pos)
 
 	bayes = np.argmax(posterior,axis=0)
-	err = bayes-ytest
+	acc = calculateAccuracy(bayes,ytest)
+	print "Accuracy on test set for naiive bayes classifier is ",acc
+
+
+def calculateAccuracy(ycalc,ytest):
+	err = ycalc-ytest
 	err = np.where(err==0)
-	acc = np.size(err)*1.0/np.size(bayes)*100
-	print "Accuracy on test set is ",acc
+	acc = np.size(err)*1.0/np.size(ycalc)*100
+	return acc
+
+
+
+def classifyKNN(xtrain,ytrain,xtest,ytest, knn):
+	n = np.size(xtest,axis=0)
+	res = distanceMetric(xtrain,xtest)
+	order = np.argsort(res,axis=1)
+	order = order[:,0:knn]
+	y = np.reshape(ytrain,(np.size(ytrain),1))
+	res=y[order]
+	res=np.squeeze(res)
+	ans=np.zeros((k,np.size(xtest,axis=0)))
+	for i in range(0,k):
+		f=np.sum((res==i)*1,axis=1)
+		ans[i]=f
+
+	ans=ans.transpose()
+	ans=np.argmax(ans,axis=1)
+	acc=calculateAccuracy(ans,ytest)
+	print "Accuracy for k-nearest neighbour with k = ",knn," is ",acc
+	return acc
+
+
+
+
+	
+
+def distanceMetric(x1,x2):
+	x1=np.asarray(x1)
+	x2=np.asarray(x2)
+	m=np.size(x1,axis=0)
+	n=np.size(x2,axis=0)
+	d=np.size(x1,axis=1)
+	x1=np.reshape(x1,(1,m,d))
+	x2=np.reshape(x2,(n,1,d))
+	diff = x1-x2
+	diff=diff*diff
+	res = np.sum(diff,axis=2)
+	return res # every row corresponds to different test sample, every column represents training sample
+
+
+
+
 
 def DataVisualization(x):
 	plt.figure(0)
@@ -80,5 +128,29 @@ N = np.size(xtrain,axis=0)
 
 
 
-DataVisualization(x)
-classify(x,xtest,ytest,N)
+# DataVisualization(x)
+knn= 10 # number of nearest neighbours to be considered
+classifyNaiiveBayes(x,xtest,ytest,N)
+
+
+def OptimumKNN(xtrain,ytrain,xtest,ytest):
+	res=[]
+	index=[]
+	for i in range(k,100):
+		t=classifyKNN(xtrain,ytrain,xtest,ytest,i)
+		res.append(t)
+		index.append(i)
+
+	opt = np.argmax(res)
+	print "Optimum K-nearest neighbour is at K=",opt+3," and gives accuracy ",res[opt]
+
+	plt.figure(1)
+	plt.plot(index,res)
+	plt.show()
+
+
+
+OptimumKNN(xtrain,ytrain,xtest,ytest)
+
+
+
