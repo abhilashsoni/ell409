@@ -23,7 +23,7 @@ def MLEGaussian(x):
 	var = np.var(x,axis=0)
 	return [mean,var]
 
-def gaussian(x,mu,var):
+def Naiivegaussian(x,mu,var):
 	d = np.size(x,axis=1)
 	n = np.size(x,axis=0)
 	sig = np.eye((d))
@@ -45,7 +45,7 @@ def classify(x,xtest,ytest,N):
 	posterior = []
 	for i in range(0,k):
 		t = MLEGaussian(x[i])
-		ccond = gaussian(xtest,t[0],t[1])
+		ccond = Naiivegaussian(xtest,t[0],t[1])
 		p = np.size(x[i],axis=0)*1.0/N
 		pos = ccond*p
 		theta.append(t)
@@ -59,17 +59,12 @@ def classify(x,xtest,ytest,N):
 	acc = np.size(err)*1.0/np.size(bayes)*100
 	print "Accuracy on test set is ",acc
 
-def DataVisualization(x0,x1,x2):
+def DataVisualization(x):
 	plt.figure(0)
-	plt.scatter(x0[:,0],x0[:,1],marker='o')
-	plt.scatter(x1[:,0],x1[:,1],marker='^')
-	plt.scatter(x2[:,0],x2[:,1],marker='X')
-	plt.figure(1)
-	plt.hist(x2[:,0],bins=100)
-	plt.figure(2)
-	plt.hist(x2[:,1],bins=100)
+	marker=['o','+','^','x','D','*','h','8','p','s','|','_']
+	for i in range(0,k):
+		plt.scatter(x[i][:,0],x[i][:,1],marker=marker[i])
 	plt.show()
-
 
 
 
@@ -85,5 +80,5 @@ N = np.size(xtrain,axis=0)
 
 
 
-
+DataVisualization(x)
 classify(x,xtest,ytest,N)
