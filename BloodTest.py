@@ -11,12 +11,16 @@ def dataProcessing(d,k):
 	ytrain=dtrain[:,0]
 	xtest = dtest[:,1:]
 	ytest = dtest[:,0]
-	x = []
-	for i in range(0,k):
-		t = dtrain[dtrain[:,0]==i,:]
-		x.append(t[:,1:])
+	x = separateByclass(xtrain,ytrain,k)
 
 	return [xtrain,ytrain,xtest,ytest,x]
+def separateByclass(x,y,k):
+	X= []
+	for i in range(0,k):
+		t = x[y[:]==i,:]
+		X.append(t)
+	return X
+
 
 	
 def PCA(m,k):
@@ -224,7 +228,10 @@ x = dp[4]
 N = np.size(xtrain,axis=0)
 # classifyNaiiveBayes(x,xtest,ytest,N)
 # OptimumKNN(xtrain,ytrain,xtest,ytest)
-x1 = PCA(xtrain,2)
-print np.shape(x1)
+xtrain1 = PCA(xtrain,2)
+xtest1 = PCA(xtest,2)
+x1 = separateByclass(xtrain1,ytrain,3)
+# classifyNaiiveBayes(x1,xtest1,ytest,N)
+# OptimumKNN(xtrain1,ytrain,xtest1,ytest)
 DataVisualization(x1)
 
