@@ -1,6 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 from numpy import genfromtxt
+from numpy import linalg as LA
 
 def dataProcessing(d,k):
 	N = np.size(d,axis=0)
@@ -17,6 +18,18 @@ def dataProcessing(d,k):
 
 	return [xtrain,ytrain,xtest,ytest,x]
 
+	
+def PCA(m,k):
+	mean = np.mean(m,axis=0)
+	m=m-mean
+	cov = np.cov(m.transpose())
+	eigval , eigvec = LA.eig(cov)
+	a = np.argsort(eigval)
+	b = eigvec[a]
+	comp = b[0:k]
+	comp = comp.transpose()
+	xtrain1=np.dot(m,comp)
+	return xtrain1
 
 def DataVisualization(x):
 	plt.figure(0)
@@ -25,11 +38,16 @@ def DataVisualization(x):
 		plt.scatter(x[i][:,0],x[i][:,1],marker=marker[i])
 	plt.show()
 
+def MLEnotGaussian(x):
+	mean = np.mean(x,axis=0)
+	var = np.cov(x.transpose())
+	return [mean,var]
 
 def MLEGaussian(x):
 	mean = np.mean(x,axis=0)
 	var = np.var(x,axis=0)
 	return [mean,var]
+
 
 def distanceMetric(x1,x2):
 	x1=np.asarray(x1)
@@ -65,6 +83,22 @@ def Naiivegaussian(x,mu,var):
 	z = np.exp(-1*z)
 	z = z/(((2*3.14)**(d/2))*det)
 	return z
+
+def gaussian(x,mu,cov):
+	d=np.size(x,axis=1)
+	n=np.size(x,axis=1)
+
+def classifyBayes(x,xtest,ytest,N):
+	theta=[]
+	cc=[]
+	prior=[]
+	posterior=[]
+	for i in range(0,k):
+		t = MLEGaussian(x[i])
+
+
+
+
 
 def classifyNaiiveBayes(x,xtest,ytest,N):
 	theta = []
@@ -131,7 +165,7 @@ def kMeans(xtrain,km):
 		c+=1
 		print c
 		print mindiff
-		if(mindiff<=0.000001):
+		if(mindiff<=0.00000001):
 			break;
 
 
@@ -188,15 +222,9 @@ xtest = dp[2]
 ytest = dp[3]
 x = dp[4]
 N = np.size(xtrain,axis=0)
-
-
-
-knn= 10 
 # classifyNaiiveBayes(x,xtest,ytest,N)
-
 # OptimumKNN(xtrain,ytrain,xtest,ytest)
-
-kMeans(d[:,1:],4)
-
-
+x1 = PCA(xtrain,2)
+print np.shape(x1)
+DataVisualization(x1)
 
