@@ -3,17 +3,6 @@ import matplotlib.pyplot as plt
 from numpy import genfromtxt
 from numpy import linalg as LA
 
-def dataProcessing(d,k):
-	N = np.size(d,axis=0)
-	dtrain = d[0:2*N/3,:]
-	dtest = d[2*N/3:,:]
-	xtrain=dtrain[:,1:]
-	ytrain=dtrain[:,0]
-	xtest = dtest[:,1:]
-	ytest = dtest[:,0]
-	x = separateByclass(xtrain,ytrain,k)
-
-	return [xtrain,ytrain,xtest,ytest,x]
 def separateByclass(x,y,k):
 	X= []
 	for i in range(0,k):
@@ -121,7 +110,8 @@ def classifyNaiiveBayes(x,xtest,ytest,N):
 
 	bayes = np.argmax(posterior,axis=0)
 	acc = calculateAccuracy(bayes,ytest)
-	print "Accuracy on test set for naiive bayes classifier is ",acc
+	# print "Accuracy on test set for naiive bayes classifier is ",acc
+	return acc
 
 
 
@@ -215,23 +205,27 @@ def OptimumKNN(xtrain,ytrain,xtest,ytest):
 
 
 
-
-
-d = genfromtxt('medicalData.txt')
+dtrain = genfromtxt('medicalData.txt')
+dtest = genfromtxt('medicaltest.txt')
 k = 3 # Number of classes
-dp = dataProcessing(d,k)
-xtrain = dp[0]
-ytrain = dp[1]
-xtest = dp[2]
-ytest = dp[3]
-x = dp[4]
-N = np.size(xtrain,axis=0)
-# classifyNaiiveBayes(x,xtest,ytest,N)
+N = np.size(dtrain,axis=0)
+xtrain=dtrain[:,1:]
+ytrain=dtrain[:,0]
+xtest = dtest[:,1:]
+ytest = dtest[:,0]
+x = separateByclass(xtrain,ytrain,k)
+acc = classifyNaiiveBayes(x,xtest,ytest,N)
+
+
+
+
+
+
 # OptimumKNN(xtrain,ytrain,xtest,ytest)
-xtrain1 = PCA(xtrain,2)
-xtest1 = PCA(xtest,2)
-x1 = separateByclass(xtrain1,ytrain,3)
+# xtrain1 = PCA(xtrain,2)
+# xtest1 = PCA(xtest,2)
+# x1 = separateByclass(xtrain1,ytrain,3)
 # classifyNaiiveBayes(x1,xtest1,ytest,N)
 # OptimumKNN(xtrain1,ytrain,xtest1,ytest)
-DataVisualization(x1)
+# DataVisualization(x1)
 
