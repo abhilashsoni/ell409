@@ -31,12 +31,13 @@ def DataVisualization(x):
 		plt.scatter(x[i][:,0],x[i][:,1],marker=marker[i])
 	plt.show()
 
-def MLEnotGaussian(x):
+def MLE(x):
 	mean = np.mean(x,axis=0)
 	var = np.cov(x.transpose())
+	print np.size(mean)
 	return [mean,var]
 
-def MLEGaussian(x):
+def MLENaiive(x):
 	mean = np.mean(x,axis=0)
 	var = np.var(x,axis=0)
 	return [mean,var]
@@ -79,15 +80,37 @@ def Naiivegaussian(x,mu,var):
 
 def gaussian(x,mu,cov):
 	d=np.size(x,axis=1)
-	n=np.size(x,axis=1)
+	n=np.size(x,axis=0)
+	sigma = cov
+	sigmainv=np.linalg.inv(cov)
+	x1 = x-mu
+	t = np.dot(x1,sigmainv)
+	t = np.dot(t,x1.transpose())
+	z = t * np.eye(n)
+	z = np.sum(z,axis=0)
+	z = np.exp(-1*z)
+	det = np.linalg.det(cov)
+	z = z/(((2*3.14)**(d/2))*det)
+	return z
 
 def classifyBayes(x,xtest,ytest,N):
-	theta=[]
-	cc=[]
-	prior=[]
-	posterior=[]
+	theta = []
+	cc = []
+	prior = []
+	posterior = []
 	for i in range(0,k):
-		t = MLEGaussian(x[i])
+		t = MLE(x[i])
+		ccond = gaussian(xtest,t[0],t[1])
+		p = np.size(x[i],axis=0)*1.0/N
+		pos = ccond*p
+		theta.append(t)
+		cc.append(ccond)
+		prior.append(p)
+		posterior.append(pos)
+	bayes = np.argmax(posterior,axis=0)
+	acc = calculateAccuracy(bayes,ytest)
+	print "Accuracy on test set for bayes classifier is ",acc
+	return acc
 
 
 
@@ -99,7 +122,7 @@ def classifyNaiiveBayes(x,xtest,ytest,N):
 	prior = []
 	posterior = []
 	for i in range(0,k):
-		t = MLEGaussian(x[i])
+		t = MLENaiive(x[i])
 		ccond = Naiivegaussian(xtest,t[0],t[1])
 		p = np.size(x[i],axis=0)*1.0/N
 		pos = ccond*p
@@ -214,9 +237,7 @@ ytrain=dtrain[:,0]
 xtest = dtest[:,1:]
 ytest = dtest[:,0]
 x = separateByclass(xtrain,ytrain,k)
-acc = classifyNaiiveBayes(x,xtest,ytest,N)
-
-
+classifyBayes(x,xtest,ytest,N)
 
 
 
