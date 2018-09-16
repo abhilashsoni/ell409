@@ -4,6 +4,8 @@ from numpy import genfromtxt
 from numpy import linalg as LA
 import mnist_reader
 import cv2
+import random
+
 
 def separateByclass(x,y,k):
 	X= []
@@ -11,21 +13,6 @@ def separateByclass(x,y,k):
 		t = x[y[:]==i,:]
 		X.append(t)
 	return X
-
-def dataProcessing(d,k):
-	N = np.size(d,axis=0)
-	dtrain = d[0:2*N/3,:]
-	dtest = d[2*N/3:,:]
-	xtrain=dtrain[:,1:]
-	ytrain=dtrain[:,0]
-	xtest = dtest[:,1:]
-	ytest = dtest[:,0]
-	x = []
-	for i in range(0,k):
-		t = dtrain[dtrain[:,0]==i,:]
-		x.append(t[:,1:])
-
-	return [xtrain,ytrain,xtest,ytest,x]
 
 
 def DataVisualization(x):
@@ -36,7 +23,7 @@ def DataVisualization(x):
 	plt.show()
 
 
-def MLEGaussian(x):
+def MLENaiive(x):
 	mean = np.mean(x,axis=0)
 	var = np.var(x,axis=0)
 	return [mean,var]
@@ -163,6 +150,25 @@ def classifyBayes(x,xtest,ytest,N):
 	print "Accuracy on test set for bayes classifier is ",acc
 	return acc
 
+def classifyBayesBayesianEstimate(x,xtest,ytest,N):
+	theta = []
+	cc = []
+	prior = []
+	posterior = []
+	for i in range(0,k):
+		t = MLE(x[i])
+		m,v = BayesianEstimate(t[0],t[1])
+		ccond = gaussian(xtest,m,v)
+		p = np.size(x[i],axis=0)*1.0/N
+		pos = ccond*p
+		theta.append(t)
+		cc.append(ccond)
+		prior.append(p)
+		posterior.append(pos)
+	bayes = np.argmax(posterior,axis=0)
+	acc = calculateAccuracy(bayes,ytest)
+	print "Accuracy on test set for bayes classifier is ",acc
+	return acc
 
 def classifyKNN(xtrain,ytrain,xtest,ytest, knn):
 	n = np.size(xtest,axis=0)
@@ -185,42 +191,67 @@ def classifyKNN(xtrain,ytrain,xtest,ytest, knn):
 	# print "Accuracy for k-nearest neighbour with k = ",knn," is ",acc
 	return np.size(err)
 
-def kMeans(xtrain,km):
-	theta = MLEGaussian(xtrain)
-	var = theta[1]
-	mu = theta[0]
-	rnd = np.random.rand(km,np.size(xtrain,axis=1))
-	centroid = var*rnd+mu
-	
+def kMeans(xtrain,km,y,xtest,ytest):
+	# theta = MLENaiive(xtrain)
+	# print "STARTTTTT"
+	# var = theta[1]
+	# mu = theta[0]
+	# print mu
+	# rnd = np.random.rand(km,np.size(xtrain,axis=1))
+	# centroid = var*rnd+mu
+	N = np.size(xtrain,axis=0)
+	number = random.sample(xrange(1,N), km)
+	centroid = xtrain[number]
+	# print "CENTROID INITIAL ",centroid
 	c=0
 	while(True):
-
 		prev=np.copy(centroid)
 		dist = distanceMetric(xtrain,centroid)
+		print "Distane Metric ", np.shape(dist)
 		curr = np.argmin(dist,axis=0)
+		print np.shape(curr)
+		print np.bincount(curr)
+		X=[]
 		for i in range(0,km):
 			temp=np.where(curr==i)
 			x1=xtrain[temp]
-			centroid[i]=np.mean(x1,axis=0)
+			n1=np.size(temp)
+			if(n1>0):
+				centroid[i]=np.mean(x1,axis=0)
+				X.append(temp)
+			else:
+				X.append(temp)
 		update=distanceMetric(prev,centroid)
 		update=update*np.eye(km,km)
 		update=np.sum(update,axis=0)
+		# print update[0]
 		mindiff=np.min(update)
-		kMeansVisualisation(xtrain,centroid,km,c)
 		c+=1
-		print c
 		print mindiff
-		if(mindiff<=0.00000001):
+		if(mindiff<=0.0000001):
 			break;
+	cl =np.zeros((km,km))
+	for i in range(0,km):
+		t = X[i]
+		p = y[t]
+		p = p.astype(int)
+		count = np.bincount(p)
+		count = np.asarray(count)
+		if(np.size(count)<km):
+			count = np.append(count,0)
+		count = count.reshape(1,np.size(count))
+		cl[i]=count
+	classes = np.argmax(cl,axis=1)
+	M = np.size(xtest,axis=0)
+	dist = distanceMetric(xtest,centroid)
+	lab = np.argmin(dist,axis=0)
+	y2 = np.zeros(M)
+	for i in range(0,km):
+		y2[np.where(lab==i)]=classes[i]
+	y2=y2.astype(int)
+	print "Kmeans accuracy " ,calculateAccuracy(y2,ytest)
+	return calculateAccuracy(y2,ytest)
 
-
-	plt.clf()
-	plt.scatter(xtrain[:,0],xtrain[:,1],color='grey',s=2)
-	plt.savefig('unclustered.png')
-
-
-
-	# print centroid
 
 
 def kMeansVisualisation(xtrain,centroid,km,i1):
@@ -265,21 +296,22 @@ k = 10 # Number of classes
 xtrain, ytrain = mnist_reader.load_mnist('data/fashion', kind='train')
 xtest, ytest = mnist_reader.load_mnist('data/fashion', kind='t10k')
 N=np.size(xtrain,axis=0)
-u = PCA(xtrain,10)
+u = PCA(xtrain,55)
 u=u.transpose()
 xtrain1=np.dot(xtrain,u)
 xtest1=np.dot(xtest,u)
 x = separateByclass(xtrain1,ytrain,k)
-print np.shape(xtest1)
-# classifyBayes(x,xtest1,ytest,N)
 E=0
 for i in range(0,9990,100):
 	E = E + classifyKNN(xtrain1[0:60000,:],ytrain,xtest1[i:i+100,:],ytest[i:i+100],10)
 
 print  E*100.0/10000
-PCAVisualize(u,xtrain[100])
-visualizeMNIST(xtrain[100],"real.png")
-# xtrain = np.dot()
+plt.scatter(i,acc,color='black',vmin = 20,vmax =100)
+
+plt.savefig("KMeansVariationWithPCA")
+
+
+
 
 
 

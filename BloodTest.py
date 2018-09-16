@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy import genfromtxt
 from numpy import linalg as LA
-
+import random
 def separateByclass(x,y,k):
 	X= []
 	for i in range(0,k):
@@ -194,38 +194,77 @@ def classifyKNN(xtrain,ytrain,xtest,ytest, knn):
 	print "Accuracy for k-nearest neighbour with k = ",knn," is ",acc
 	return acc
 
-def kMeans(xtrain,km):
-	theta = MLEGaussian(xtrain)
-	var = theta[1]
-	mu = theta[0]
-	rnd = np.random.rand(km,np.size(xtrain,axis=1))
-	centroid = var*rnd+mu
-	
+def kMeans(xtrain,km,y,xtest,ytest):
+	# theta = MLENaiive(xtrain)
+	# print "STARTTTTT"
+	# var = theta[1]
+	# mu = theta[0]
+	# print mu
+	# rnd = np.random.rand(km,np.size(xtrain,axis=1))
+	# centroid = var*rnd+mu
+	N = np.size(xtrain,axis=0)
+	number = random.sample(xrange(1,N), km)
+	centroid = xtrain[number]
+	# print "CENTROID INITIAL ",centroid
 	c=0
 	while(True):
-
 		prev=np.copy(centroid)
 		dist = distanceMetric(xtrain,centroid)
+		print "Distane Metric ", np.shape(dist)
 		curr = np.argmin(dist,axis=0)
+		print np.shape(curr)
+		print np.bincount(curr)
+		X=[]
 		for i in range(0,km):
 			temp=np.where(curr==i)
 			x1=xtrain[temp]
-			centroid[i]=np.mean(x1,axis=0)
+			n1=np.size(temp)
+			if(n1>0):
+				centroid[i]=np.mean(x1,axis=0)
+				X.append(temp)
+			else:
+				X.append(temp)
 		update=distanceMetric(prev,centroid)
 		update=update*np.eye(km,km)
 		update=np.sum(update,axis=0)
+		# print update[0]
 		mindiff=np.min(update)
-		kMeansVisualisation(xtrain,centroid,km,c)
 		c+=1
-		print c
 		print mindiff
-		if(mindiff<=0.00000001):
+		if(mindiff<=0.0000001):
 			break;
+	cl =np.zeros((km,km))
+	for i in range(0,km):
+		t = X[i]
+		p = y[t]
+		p = p.astype(int)
+		count = np.bincount(p)
+		count = np.asarray(count)
+		if(np.size(count)<km):
+			count = np.append(count,0)
+		count = count.reshape(1,np.size(count))
+		cl[i]=count
+	classes = np.argmax(cl,axis=1)
+	M = np.size(xtest,axis=0)
+	dist = distanceMetric(xtest,centroid)
+	lab = np.argmin(dist,axis=0)
+	y2 = np.zeros(M)
+	for i in range(0,km):
+		y2[np.where(lab==i)]=classes[i]
+	y2=y2.astype(int)
+	print "Kmeans accuracy " ,calculateAccuracy(y2,ytest)
 
 
-	plt.clf()
-	plt.scatter(xtrain[:,0],xtrain[:,1],color='grey',s=2)
-	plt.savefig('unclustered.png')
+
+
+
+
+
+
+
+
+	# plt.scatter(xtrain[:,0],xtrain[:,1],color='grey',s=2)
+	# plt.savefig('unclustered.png')
 
 
 
@@ -277,7 +316,7 @@ x = separateByclass(xtrain,ytrain,k)
 classifyBayes(x,xtest,ytest,N)
 
 
-
+kMeans(xtrain,3,ytrain,xtest,ytest)
 # OptimumKNN(xtrain,ytrain,xtest,ytest)
 # xtrain1 = PCA(xtrain,2)
 # xtest1 = PCA(xtest,2)
