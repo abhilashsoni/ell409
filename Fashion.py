@@ -167,7 +167,6 @@ def classifyBayes(x,xtest,ytest,N):
 def classifyKNN(xtrain,ytrain,xtest,ytest, knn):
 	n = np.size(xtest,axis=0)
 	res = distanceMetric(xtrain,xtest)
-	print np.shape(res)
 	order = np.argsort(res,axis=1)
 	order = order[:,0:knn]
 	y = np.reshape(ytrain,(np.size(ytrain),1))
@@ -271,7 +270,7 @@ xtest1=np.dot(xtest,u)
 x = separateByclass(xtrain1,ytrain,k)
 print np.shape(xtrain1)
 # classifyBayes(x,xtest1,ytest,N)
-classifyKNN(xtrain1[0:20000,:],ytrain,xtest1,ytest,20)
+classifyKNN(xtrain1[:6000,:],ytrain,xtest1,ytest,10)
 
 PCAVisualize(u,xtrain[100])
 visualizeMNIST(xtrain[100],"real.png")
