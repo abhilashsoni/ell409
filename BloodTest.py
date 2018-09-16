@@ -75,7 +75,7 @@ def Naiivegaussian(x,mu,var):
 	z = z * np.eye(n)
 	z = np.sum(z,axis=0)
 	z = np.exp(-1*z)
-	z = z/(((2*3.14)**(d/2))*det)
+	z = z/(((2*3.14)**(d/2))*(det**(1/2)))
 	return z
 
 def gaussian(x,mu,cov):
@@ -90,7 +90,7 @@ def gaussian(x,mu,cov):
 	z = np.sum(z,axis=0)
 	z = np.exp(-1*z)
 	det = np.linalg.det(cov)
-	z = z/(((2*3.14)**(d/2))*det)
+	z = z/(((2*3.14)**(d/2))*(det**(1/2)))
 	return z
 
 def classifyBayes(x,xtest,ytest,N):
