@@ -138,7 +138,7 @@ def classifyBayesBayesianEstimate(x,xtest,ytest,N):
 	posterior = []
 	for i in range(0,k):
 		t = MLE(x[i])
-		m,v = BayesianEstimate(t[0],t[1])
+		m,v = BayesianEstimate(t[0],t[1],np.size(x[i],axis=0))
 		ccond = gaussian(xtest,m,v)
 		p = np.size(x[i],axis=0)*1.0/N
 		pos = ccond*p
