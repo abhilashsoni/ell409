@@ -167,7 +167,6 @@ def classifyBayes(x,xtest,ytest,N):
 def classifyKNN(xtrain,ytrain,xtest,ytest, knn):
 	n = np.size(xtest,axis=0)
 	res = distanceMetric(xtrain,xtest)
-	print np.shape(res)
 	order = np.argsort(res,axis=1)
 	order = order[:,0:knn]
 	y = np.reshape(ytrain,(np.size(ytrain),1))
@@ -180,9 +179,11 @@ def classifyKNN(xtrain,ytrain,xtest,ytest, knn):
 
 	ans=ans.transpose()
 	ans=np.argmax(ans,axis=1)
-	acc=calculateAccuracy(ans,ytest)
-	print "Accuracy for k-nearest neighbour with k = ",knn," is ",acc
-	return acc
+	err = ans-ytest
+	err = np.where(err==0)
+	print np.size(err)
+	# print "Accuracy for k-nearest neighbour with k = ",knn," is ",acc
+	return np.size(err)
 
 def kMeans(xtrain,km):
 	theta = MLEGaussian(xtrain)
@@ -264,15 +265,18 @@ k = 10 # Number of classes
 xtrain, ytrain = mnist_reader.load_mnist('data/fashion', kind='train')
 xtest, ytest = mnist_reader.load_mnist('data/fashion', kind='t10k')
 N=np.size(xtrain,axis=0)
-u = PCA(xtrain,3)
+u = PCA(xtrain,10)
 u=u.transpose()
 xtrain1=np.dot(xtrain,u)
 xtest1=np.dot(xtest,u)
 x = separateByclass(xtrain1,ytrain,k)
-print np.shape(xtrain1)
+print np.shape(xtest1)
 # classifyBayes(x,xtest1,ytest,N)
-classifyKNN(xtrain1[0:20000,:],ytrain,xtest1,ytest,20)
+E=0
+for i in range(0,9990,100):
+	E = E + classifyKNN(xtrain1[0:60000,:],ytrain,xtest1[i:i+100,:],ytest[i:i+100],10)
 
+print  E*100.0/10000
 PCAVisualize(u,xtrain[100])
 visualizeMNIST(xtrain[100],"real.png")
 # xtrain = np.dot()
