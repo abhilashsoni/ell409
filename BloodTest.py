@@ -37,6 +37,24 @@ def MLE(x):
 	print np.size(mean)
 	return [mean,var]
 
+def BayesianEstimate(mu,cov,n):
+	d = np.size(cov,axis=1)
+	mu0 = np.zeros((1,d))
+	sigma = cov
+	sigma0 = np.eye(d,d)
+	t = sigma0+sigma*1.0/n
+	t = np.linalg.inv(t)
+	t1 = np.dot(sigma0,t)
+	t2 = np.dot(sigma,t)
+	t1 = np.dot(mu,t1)
+	t2 = np.dot(mu0,t2)
+	mean = t1+t2
+	sigman = np.dot(t1,sigma)
+	sigman = sigman*1.0/n
+	sigman = sigma+sigman
+	return [mean,sigman]
+
+
 def MLENaiive(x):
 	mean = np.mean(x,axis=0)
 	var = np.var(x,axis=0)
@@ -93,6 +111,7 @@ def gaussian(x,mu,cov):
 	z = z/(((2*3.14)**(d/2))*(det**(1/2)))
 	return z
 
+
 def classifyBayes(x,xtest,ytest,N):
 	theta = []
 	cc = []
@@ -112,7 +131,25 @@ def classifyBayes(x,xtest,ytest,N):
 	print "Accuracy on test set for bayes classifier is ",acc
 	return acc
 
-
+def classifyBayesBayesianEstimate(x,xtest,ytest,N):
+	theta = []
+	cc = []
+	prior = []
+	posterior = []
+	for i in range(0,k):
+		t = MLE(x[i])
+		m,v = BayesianEstimate(t[0],t[1])
+		ccond = gaussian(xtest,m,v)
+		p = np.size(x[i],axis=0)*1.0/N
+		pos = ccond*p
+		theta.append(t)
+		cc.append(ccond)
+		prior.append(p)
+		posterior.append(pos)
+	bayes = np.argmax(posterior,axis=0)
+	acc = calculateAccuracy(bayes,ytest)
+	print "Accuracy on test set for bayes classifier is ",acc
+	return acc
 
 
 
@@ -238,7 +275,6 @@ xtest = dtest[:,1:]
 ytest = dtest[:,0]
 x = separateByclass(xtrain,ytrain,k)
 classifyBayes(x,xtest,ytest,N)
-
 
 
 
