@@ -28,6 +28,56 @@ def MLENaiive(x):
 	var = np.var(x,axis=0)
 	return [mean,var]
 
+def statistics(ycalc,ytest,k):
+	m = np.zeros((k,k))
+	for i in range(0,k):
+		ind =  np.where(ytest==i)
+		t = ycalc[ind]
+		print np.size(t)
+		for j in range(0,k):
+			t1 = np.where(t==j)
+			e = np.size(t1)
+			m[i][j]=e
+
+	m = m.transpose()
+	print "Confusion Matrix"
+	print m
+	totpredicted = np.sum(m,axis=1)
+	totactual = np.sum(m,axis=0)
+	p = np.eye((k))*m
+	p = np.sum(p,axis=0)*1.0
+	precision = np.divide(p,totpredicted)
+	recall = np.divide(p,totactual)
+	f1=2*precision*recall
+	f2=precision+recall
+	fscore = f1/f2
+	print "Precision "
+	print  precision
+	print "Recall "
+	print recall
+	print "Fscore"
+	print fscore
+
+	return m
+
+def BayesianEstimate(mu,cov,n):
+	d = np.size(cov,axis=1)
+	mu0 = np.zeros((1,d))
+	sigma = cov
+	sigma0 = np.eye(d,d)
+	t = sigma0+sigma*1.0/n
+	t = np.linalg.inv(t)
+	t1 = np.dot(sigma0,t)
+	t2 = np.dot(sigma,t)
+	t1 = np.dot(mu,t1)
+	t2 = np.dot(mu0,t2)
+	mean = t1+t2
+	sigman = np.dot(t1,sigma)
+	sigman = sigman*1.0/n
+	sigman = sigma+sigman
+	return [mean,sigman]
+
+
 def distanceMetric(x1,x2):
 	x1=np.asarray(x1)
 	x2=np.asarray(x2)
@@ -45,6 +95,7 @@ def calculateAccuracy(ycalc,ytest):
 	err = ycalc-ytest
 	err = np.where(err==0)
 	acc = np.size(err)*1.0/np.size(ycalc)*100
+	statistics(ycalc,ytest,10)
 	return acc
 
 
@@ -157,7 +208,7 @@ def classifyBayesBayesianEstimate(x,xtest,ytest,N):
 	posterior = []
 	for i in range(0,k):
 		t = MLE(x[i])
-		m,v = BayesianEstimate(t[0],t[1])
+		m,v = BayesianEstimate(t[0],t[1],np.size(x[i],axis=0))
 		ccond = gaussian(xtest,m,v)
 		p = np.size(x[i],axis=0)*1.0/N
 		pos = ccond*p
@@ -296,19 +347,24 @@ k = 10 # Number of classes
 xtrain, ytrain = mnist_reader.load_mnist('data/fashion', kind='train')
 xtest, ytest = mnist_reader.load_mnist('data/fashion', kind='t10k')
 N=np.size(xtrain,axis=0)
-u = PCA(xtrain,55)
+u = PCA(xtrain,80)
 u=u.transpose()
 xtrain1=np.dot(xtrain,u)
 xtest1=np.dot(xtest,u)
 x = separateByclass(xtrain1,ytrain,k)
+classifyBayesBayesianEstimate(x,xtest1,ytest,N)
+classifyBayes(x,xtest1,ytest,N)
+classifyNaiiveBayes(x,xtest1,ytest,N)
+kMeans(xtrain1,k,ytrain,xtest,ytest)
 E=0
 for i in range(0,9990,100):
 	E = E + classifyKNN(xtrain1[0:60000,:],ytrain,xtest1[i:i+100,:],ytest[i:i+100],10)
 
-print  E*100.0/10000
-plt.scatter(i,acc,color='black',vmin = 20,vmax =100)
+print  "Accuracy for KNN ",E*100.0/10000
 
-plt.savefig("KMeansVariationWithPCA")
+# plt.scatter(i,acc,color='black',vmin = 20,vmax =100)
+
+# plt.savefig("KMeansVariationWithPCA")
 
 
 
